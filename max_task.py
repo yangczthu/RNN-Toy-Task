@@ -257,7 +257,7 @@ def main(model, math, attention, n_iter, n_batch, n_hidden, capacity, comp, FFT)
 
 
 	# --- save result ----------------------
-	filename = "./output/max/"  + model + "_N=" + str(n_hidden)
+	filename = "./output/max/"  + model + "_N=" + str(n_hidden) + "_attention=" + str(attention)
 		
 	if math == 'ADD':
 		filename += '_add'
@@ -332,23 +332,23 @@ def main(model, math, attention, n_iter, n_batch, n_hidden, capacity, comp, FFT)
 		print("Optimization Finished!")
 
 
-		x_data = sess.run(x, feed_dict={x: batch_x, y: batch_y})[0]
-		y_data = sess.run(output_data, feed_dict={x: batch_x, y: batch_y})[0]
-		fig = plt.figure()
-		fig.add_subplot(1,2,1)
-		plt.imshow(x_data.transpose())
-		fig.add_subplot(1,2,2)
-		plt.imshow(y_data.transpose())
-		from matplotlib.backends.backend_pdf import PdfPages
-		if math == "ADD":
-			pp = PdfPages('adding.pdf')
-		elif math == "MULTIPLY":
-			pp = PdfPages('multiplication.pdf')
-		elif math == "MIX":
-			pp = PdfPages('mix.pdf')
+		# x_data = sess.run(x, feed_dict={x: batch_x, y: batch_y})[0]
+		# y_data = sess.run(output_data, feed_dict={x: batch_x, y: batch_y})[0]
+		# fig = plt.figure()
+		# fig.add_subplot(1,2,1)
+		# plt.imshow(x_data.transpose())
+		# fig.add_subplot(1,2,2)
+		# plt.imshow(y_data.transpose())
+		# from matplotlib.backends.backend_pdf import PdfPages
+		# if math == "ADD":
+		# 	pp = PdfPages('adding.pdf')
+		# elif math == "MULTIPLY":
+		# 	pp = PdfPages('multiplication.pdf')
+		# elif math == "MIX":
+		# 	pp = PdfPages('mix.pdf')
 
-		plt.savefig(pp, format='pdf')
-		pp.close()
+		# plt.savefig(pp, format='pdf')
+		# pp.close()
 
 
 		

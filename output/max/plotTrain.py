@@ -21,8 +21,6 @@ def read_file(filename):
 			continue
 		elif line[0] == "\n":
 			continue
-		elif line[0] == "T":
-			continue
 		else:
 			flag = flag + 1
 			# if flag % 5 == 0:
@@ -30,41 +28,36 @@ def read_file(filename):
 			data = line.split('\t')
 			steps.append(float(data[0]))
 			losses.append(float(data[1]))
+			# acc.append(float(data[2]))
 	
 	return steps, losses, name
-
-def move_avg(a,n=10):
-	ret = np.cumsum(a)
-	ret[n:] = ret[n:] - ret[:-n]
-	return ret[n-1:]/n
 
 
 if __name__ == '__main__':
 	arg = sys.argv
-
+	color_list = ['b', 'm', 'r', '#7a6a1a', 'g']
 
 	# T = int(arg[1])
 	legend = []
 	l = len(arg) - 1
-	mylist=range(1, l+1)
 	for k in range(l):
 		i = arg[k + 1]
 		steps, losses, name = read_file(i)
-		
-		tempval = move_avg(losses)
-		mylist[k] = np.array(tempval)
-		#print(len(tempval))
-		#print(len(steps))
-		plt.plot(steps[9:], tempval)
+		plt.plot(steps, losses)
 		legend.append(name)
+		
 
-
-	plt.title('Multiplication digit Task')
+	# base = 10*np.log(8)/(200+20)	
+	# plt.plot(steps, [base]*len(steps), ':')
+	plt.title('Max Task')
 	plt.ylabel('MSE')
 	plt.xlabel('Training iterations')
-	plt.axis([0,100000,0,0.3])
-	plt.legend(legend, loc='upper right')
+	plt.axis([0,10000,0,0.2])
+
+	plt.legend(legend, loc='lower right')
 	plt.show()
+
+
 	# from matplotlib.backends.backend_pdf import PdfPages
 	# pp = PdfPages('mnist.pdf')
 	# plt.savefig(pp, format='pdf')
