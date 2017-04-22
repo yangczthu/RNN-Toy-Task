@@ -10,8 +10,7 @@ import matplotlib.pyplot as plt
 
 from tensorflow.contrib.rnn import BasicLSTMCell, BasicRNNCell
 from EURNN import EURNNCell
-from uLSTM import UnitaryLSTMCell
-from resNet import resNetCell
+
 
 def digit_to_pixel(n):
 	if n == 0:
@@ -47,7 +46,7 @@ def digit_to_pixel(n):
 	elif n == 13:
 		return [[0,1,0,1,0], [0,0,1,0,0], [0,1,0,1,0], [0]*5]
 
-def max_data(n, math):
+def max_data(n, math, ratio):
 
 	x = []
 	y = []
@@ -133,7 +132,7 @@ def max_data(n, math):
 			x_element += digit_to_pixel(d1)
 			x_element += digit_to_pixel(d2)
 			x_element += digit_to_pixel(d3)
-			if random.random() > 0.5:
+			if random.random() > ratio:
 				s = False
 				x_element += digit_to_pixel(10)
 			else:
@@ -219,18 +218,8 @@ def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 	elif model == "RNN":
 		cell = BasicRNNCell(n_hidden)
 		hidden_out, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32)
-	elif model == "resNet":
-		cell = resNetCell(n_hidden)
-		hidden_out, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32)
 	elif model == "EURNN":
 		cell = EURNNCell(n_hidden, capacity, FFT, comp)
-		if comp:
-			hidden_out_comp, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.complex64)
-			hidden_out = tf.real(hidden_out_comp)
-		else:
-			hidden_out, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32)
-	elif model == "uLSTM":
-		cell = UnitaryLSTMCell(n_hidden, capacity, FFT, comp)
 		if comp:
 			hidden_out_comp, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.complex64)
 			hidden_out = tf.real(hidden_out_comp)
@@ -304,7 +293,8 @@ def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 		mses = []
 
 		while step < n_iter:
-			batch_x, batch_y = max_data(n_batch, math)
+			train_ratio = 0.1
+			batch_x, batch_y = max_data(n_batch, math, train_ratio)
 
 			sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
 
@@ -354,11 +344,15 @@ def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 
 		
 		# --- test ----------------------
-		test_x, test_y = max_data(n_test, math)
-
+		test_ratio = -1
+		test_x, test_y = max_data(n_test, math, test_ratio)
 		test_mse = sess.run(mse, feed_dict={x: test_x, y: test_y})
-		print("Test result: MSE= " + "{:.6f}".format(test_mse))
+		print("Adding test result: MSE= " + "{:.6f}".format(test_mse))
 
+		test_ratio = 10
+		test_x, test_y = max_data(n_test, math, test_ratio)
+		test_mse = sess.run(mse, feed_dict={x: test_x, y: test_y})
+		print("Multiplying test result: MSE= " + "{:.6f}".format(test_mse))
 
 if __name__=="__main__":
 	parser = argparse.ArgumentParser(
@@ -367,7 +361,7 @@ if __name__=="__main__":
 	parser.add_argument("math", default='ADD', help='ADD or MULTIPLY or MIX')
 	parser.add_argument('--n_iter', '-I', type=int, default=100000, help='training iteration number')
 	parser.add_argument('--n_batch', '-B', type=int, default=128, help='batch size')
-	parser.add_argument('--n_hidden', '-H', type=int, default=512, help='hidden layer size')
+	parser.add_argument('--n_hidden', '-H', type=int, default=1024, help='hidden layer size')
 	parser.add_argument('--capacity', '-L', type=int, default=2, help='Tunable style capacity, only for EURNN, default value is 2')
 	parser.add_argument('--comp', '-C', type=str, default="False", help='Complex domain or Real domain. Default is False: real domain')
 	parser.add_argument('--FFT', '-F', type=str, default="False", help='FFT style, only for EURNN, default is False')
