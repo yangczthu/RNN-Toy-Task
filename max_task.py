@@ -46,7 +46,7 @@ def digit_to_pixel(n):
 	elif n == 13:
 		return [[0,1,0,1,0], [0,0,1,0,0], [0,1,0,1,0], [0]*5]
 
-def max_data(n, math, ratio):
+def max_data(n, math, ratio, attention):
 
 	x = []
 	y = []
@@ -179,13 +179,22 @@ def max_data(n, math, ratio):
 	x = np.array(x).astype(np.float32)
 	y = np.array(y).astype(np.float32)
 
+
+	a = []
+	for i in range(attention):
+		a.append(x[:, i:i-attention])
+	x = np.concatenate(a, axis=2)
+
+
+
 	return x, y
 
 
 
-def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
+def main(model, math, attention, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 	print(math)
 	n_test = 10000
+
 	# --- Set data params ----------------
 	if math == 'ADD':
 		n_input = 11 * 4
@@ -197,15 +206,17 @@ def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 		n_input = 14 * 4
 		n_output = 6 * 4
 
-	n_classes = 5
+	n_classes = 5 
+	n_input -= attention
+	n_classes *= attention
 
-  	# --- Create data --------------------
 
 
 	# --- Create graph and compute gradients ----------------------
 	x = tf.placeholder("float", [None, n_input, n_classes])
 	y = tf.placeholder("float", [None, n_output, n_classes])
 	
+
 
 	V_init_val = np.sqrt(6.)/np.sqrt(n_classes * 2)
 
@@ -294,7 +305,7 @@ def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 
 		while step < n_iter:
 			train_ratio = 0.1
-			batch_x, batch_y = max_data(n_batch, math, train_ratio)
+			batch_x, batch_y = max_data(n_batch, math, train_ratio, attention)
 
 			sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
 
@@ -345,12 +356,12 @@ def main(model, math, n_iter, n_batch, n_hidden, capacity, comp, FFT):
 		
 		# --- test ----------------------
 		test_ratio = -1
-		test_x, test_y = max_data(n_test, math, test_ratio)
+		test_x, test_y = max_data(n_test, math, test_ratio, attention)
 		test_mse = sess.run(mse, feed_dict={x: test_x, y: test_y})
 		print("Adding test result: MSE= " + "{:.6f}".format(test_mse))
 
 		test_ratio = 10
-		test_x, test_y = max_data(n_test, math, test_ratio)
+		test_x, test_y = max_data(n_test, math, test_ratio, attention)
 		test_mse = sess.run(mse, feed_dict={x: test_x, y: test_y})
 		print("Multiplying test result: MSE= " + "{:.6f}".format(test_mse))
 
@@ -359,6 +370,7 @@ if __name__=="__main__":
 		description="Max Task")
 	parser.add_argument("model", default='LSTM', help='Model name: LSTM, EURNN, uLSTM, resNet')
 	parser.add_argument("math", default='ADD', help='ADD or MULTIPLY or MIX')
+	parser.add_argument("attention", default='5', help='attention window')
 	parser.add_argument('--n_iter', '-I', type=int, default=100000, help='training iteration number')
 	parser.add_argument('--n_batch', '-B', type=int, default=128, help='batch size')
 	parser.add_argument('--n_hidden', '-H', type=int, default=1024, help='hidden layer size')
@@ -378,6 +390,7 @@ if __name__=="__main__":
 	kwargs = {	
 				'model': dict['model'],
 				'math': dict['math'],
+				'attention': dict['attention']
 				'n_iter': dict['n_iter'],
 			  	'n_batch': dict['n_batch'],
 			  	'n_hidden': dict['n_hidden'],
