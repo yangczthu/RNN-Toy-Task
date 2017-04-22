@@ -178,11 +178,10 @@ def max_data(n, math, ratio, attention):
 
 	x = np.array(x).astype(np.float32)
 	y = np.array(y).astype(np.float32)
-
-
 	a = []
 	for i in range(attention):
-		a.append(x[:, i:i-attention])
+		new_l = np.array(x[:, i:i-attention])
+		a.append(new_l)
 	x = np.concatenate(a, axis=2)
 
 
@@ -208,12 +207,11 @@ def main(model, math, attention, n_iter, n_batch, n_hidden, capacity, comp, FFT)
 
 	n_classes = 5 
 	n_input -= attention
-	n_classes *= attention
 
 
 
 	# --- Create graph and compute gradients ----------------------
-	x = tf.placeholder("float", [None, n_input, n_classes])
+	x = tf.placeholder("float", [None, n_input, n_classes * attention])
 	y = tf.placeholder("float", [None, n_output, n_classes])
 	
 
@@ -370,8 +368,8 @@ if __name__=="__main__":
 		description="Max Task")
 	parser.add_argument("model", default='LSTM', help='Model name: LSTM, EURNN, uLSTM, resNet')
 	parser.add_argument("math", default='ADD', help='ADD or MULTIPLY or MIX')
-	parser.add_argument("attention", default='5', help='attention window')
-	parser.add_argument('--n_iter', '-I', type=int, default=100000, help='training iteration number')
+	parser.add_argument("attention", type=int, default=5, help='attention window')
+	parser.add_argument('--n_iter', '-I', type=int, default=10000, help='training iteration number')
 	parser.add_argument('--n_batch', '-B', type=int, default=128, help='batch size')
 	parser.add_argument('--n_hidden', '-H', type=int, default=1024, help='hidden layer size')
 	parser.add_argument('--capacity', '-L', type=int, default=2, help='Tunable style capacity, only for EURNN, default value is 2')
@@ -390,7 +388,7 @@ if __name__=="__main__":
 	kwargs = {	
 				'model': dict['model'],
 				'math': dict['math'],
-				'attention': dict['attention']
+				'attention': dict['attention'],
 				'n_iter': dict['n_iter'],
 			  	'n_batch': dict['n_batch'],
 			  	'n_hidden': dict['n_hidden'],
